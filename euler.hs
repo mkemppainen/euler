@@ -17,14 +17,15 @@ divisorCount :: Int -> Int -> [(Int,Int)] -> Int
 divisorCount 1 _ _ = 1
 divisorCount n c list -- c = jakaja kanditaatti
   | found > 0    = found
-  | mod n c == 0 = 1 + (divisorCount
+  | mod n c == 0 = trace ("kutsu arvoilla" ++ show n ++ show c)
+                   (1 + (divisorCount
                         (n `div` c)
                         c
-                        (maybeAdd c list))
+                        (maybeAdd c list)))
   | otherwise    = divisorCount n (c + 1) list
     where found = fromMaybe 0 (lookup n list)
           maybeAdd n xs = if any ((n==).(fst)) xs
                           then xs --ok
-                          else xs ++ [(c, (divisorCount c 1 xs))]
+                          else xs ++ [(c, (divisorCount c 2 xs))]
 
 -- hurts so much
