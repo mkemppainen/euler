@@ -3,16 +3,20 @@ import Data.Maybe
 import Debug.Trace
 import Data.List
 import Data.Char
+import Data.Ratio
 
+-- Complete euler numbers: 20, 27, 34
+-- Incomplete euler numbers: 12
 
 -- Euler 12
 
 -- nth triangular number
-triangular2 n = sum(take n [1..])
-triangular 1 = 1
-triangular n = triangular(n-1) + n
-
+--triangular2 n = sum(take n [1..])
+--triangular 1 = 1
+--triangular n = triangular(n-1) + n
 -- infinite list of triangular numbers
+triangular :: Int -> Int
+triangular n = let m = fromIntegral n in (m^2+m) `div` 2
 trilist :: [Int]
 trilist = tri 1 2 where
   tri c n = c:(tri (c + n) (n + 1))
@@ -38,48 +42,53 @@ isPrime' _ _ = error "Not enough preceding primes."
 
 isPrime :: Int -> Bool
 isPrime n = isPrime' listPrimes n
-  
 
 
 -- found = ((1,1),(2,2),(3,2),(4,2),(5,1)) -> 1*2*2*3*3*4*4*5
-divisorCount :: Int -> Int -> [(Int,Int)] -> Int
-divisorCount 1 _ _ = 1
-divisorCount n c list -- c = divisor canditate
+_divisorCount :: Int -> Int -> [(Int,Int)] -> Int
+_divisorCount 1 _ _ = 1
+_divisorCount n c list -- c = divisor canditate
   | found > 0    = found
-  | mod n c == 0 = trace ("kutsu arvoilla" ++ show n ++ show c)
-                   (1 + (divisorCount
+  | mod n c == 0 = trace ("kutsu arvoilla " ++ show n ++" " ++ show c ++ " " ++ (show list))
+                   (1 + (_divisorCount
                         (n `div` c)
                         c
                         (maybeAdd c list)))
-  | otherwise    = divisorCount n (c + 1) list
+  | otherwise    = _divisorCount n (c + 1) list
     where found = fromMaybe 0 (lookup n list)
           maybeAdd n xs = if any ((n==).(fst)) xs
                           then xs --ok
-                          else xs ++ [(c, (divisorCount c 2 xs))]
+                          else xs ++ [(c, (_divisorCount c 2 xs))]
 
 
---nub -> remove duplicates
--- palauttaa jakajat ja niiden maarat
-divisors :: Int -> [(Int,Int)]
-divisors x = divisors' x 2 []
-
-  where divisors' n c list | n `mod` c == 0 = divisors' (n `div` c) c (maybeAdd c list)
-                           | otherwise = divisors' n (c+2) list
+-- palauttaa alkujakajat ja niiden maarat
+primeDivisors :: Int -> [(Int,Int)]
+primeDivisors x | x < 2 = []
+                | otherwise = divisors' x 2 []
+  where divisors' :: Int -> Int -> [(Int,Int)] -> [(Int,Int)]
+        divisors' n c list | n `mod` c == 0 = divisors' (n `div` c) c (maybeAdd c list)
+                           | c > (floor $ sqrt (fromIntegral n)) = maybeAdd n list
+                           | c > 2 = divisors' n (c+2) list
+                           | otherwise = divisors' n (c+1) list
+        maybeAdd :: Int -> [(Int,Int)] -> [(Int,Int)]
+        maybeAdd 1 l = l
         maybeAdd n [] = [(n,1)]
         maybeAdd n ((x,y):xs) | x == n = (x,(y+1)):xs
                               | otherwise =  (x,y):(maybeAdd n xs)
+        
+factorCount :: Int -> Int
+factorCount n = foldr ((*) . (1+) . snd) 1 (primeDivisors n)
 
-{-
-   divisors n c list -- c = divisor canditate
-     | mod n c == 0 = (1 + (divisors -- on jaollinen luvulla
-                            (n `div` c)
-                            c
-                            (maybeAdd c list)))
-     | otherwise  = divisors n (c + 1) list
--}
+euler12 :: Int -> Int
+euler12 x = findFirstSuch [1..x]
+  where over500DivisorsP = (> 500) . factorCount . triangular
+        findFirstSuch [] = -1
+        findFirstSuch (x:xs) | over500DivisorsP x = triangular x
+                             | otherwise = findFirstSuch xs
 
 -- Euler 20 - digit factorials
 _euler20 = sum $ map digitToInt $ show $ product [1..100]
+_euler20b = sum . map digitToInt . show $ product [1..100]
 
 -- Euler 27
 
@@ -102,3 +111,7 @@ isFacSum n = n == fromIntegral (sum $ map (factorial . digitToInt) $ show n)
 digitFactorials n = sum $ filter isFacSum [1..n]
 
 _euler34 = digitFactorials 962845 - 3
+
+main = do
+  let a = euler12 100000
+  print a        
