@@ -3,7 +3,7 @@ import Data.Maybe
 import Debug.Trace
 import Data.List
 import Data.Char
-import Data.Ratio
+import Data.List.Split
 
 -- Complete euler numbers: 20, 27, 34
 -- Incomplete euler numbers: 12
@@ -29,7 +29,7 @@ listPrimes = 2:(listPrimes' 3 [2])
         listPrimes' c (x:xs) = if isPrime' (x:xs) c
                                then c:(listPrimes' (c+2) ((x:xs) ++ [c])) -- vika
                                else listPrimes' (c+2) (x:xs)
-
+        listPrimes' _ _ = error "Hiljaa, kaantaja"
 
 isPrime' :: [Int] -> Int -> Bool -- list of preceding primes, prime canditate
 isPrime' _ 2  = True
@@ -56,7 +56,7 @@ _divisorCount n c list -- c = divisor canditate
                         (maybeAdd c list)))
   | otherwise    = _divisorCount n (c + 1) list
     where found = fromMaybe 0 (lookup n list)
-          maybeAdd n xs = if any ((n==).(fst)) xs
+          maybeAdd m xs = if any ((m==).(fst)) xs
                           then xs --ok
                           else xs ++ [(c, (_divisorCount c 2 xs))]
 
@@ -79,8 +79,8 @@ primeDivisors x | x < 2 = []
 factorCount :: Int -> Int
 factorCount n = foldr ((*) . (1+) . snd) 1 (primeDivisors n)
 
-euler12 :: Int -> Int
-euler12 x = findFirstSuch [1..x]
+_euler12 :: Int -> Int
+_euler12 x = findFirstSuch [1..x]
   where over500DivisorsP = (> 500) . factorCount . triangular
         findFirstSuch [] = -1
         findFirstSuch (x:xs) | over500DivisorsP x = triangular x
@@ -112,6 +112,38 @@ digitFactorials n = sum $ filter isFacSum [1..n]
 
 _euler34 = digitFactorials 962845 - 3
 
+-- Euler 22
+
+stringSum :: String -> Int
+stringSum s = foldr ((+) . (-64+) . ord) 0 s
+
+-- summaa sanan numerolla kerrottuna sana summa
+-- aloitusindexin numero sanalista, numero
+sumAndMultiplyByLineNum :: Int -> [String] -> Int
+sumAndMultiplyByLineNum _ [] = 0
+sumAndMultiplyByLineNum n (x:xs) = n * stringSum x +
+                                   sumAndMultiplyByLineNum (n+1) xs
+
+_euler22 = sumAndMultiplyByLineNum 1 . dropWhile (==[]) . sort . splitOneOf ",\""
+
+_euler22IO :: FilePath -> IO ()
+_euler22IO path = readFile path >>= putStrLn . show . _euler22
+
+_testEuler22 =  readFile "euler-data/p022_names.txt" >>=
+                putStrLn . show . _euler22
+
+_test = readFile "euler-data/p022_names.txt" >>=
+                putStrLn . read
+
+
+-- Euler 78
+-- rekursiivisesti laske kolikoiden kombinaatiomaarat
+-- tallenna maarat listaan parina [(5,7)]piccolo
+
+
+
+-----------------------------------------------------------------------------
+
 main = do
-  let a = euler12 100000
+  let a = 100000
   print a        
